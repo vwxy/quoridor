@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+<head>
+  <title>meadow</title>
+  <script src='raphael-min.js'></script>
+</head>
+<body>
+  <div id='title' style='position:absolute;left:1em;top:1em'></div>
+  <div id='paper' style='position:absolute;left:1em;top:50px'></div>
+  <div style='position:absolute;left:728px;top:58px;font-family:georgia'>
+    would you like to play <a href='https://en.wikipedia.org/wiki/Quoridor' target='_blank'>quoridor</a>?<br><br>
+    choose an AI opponent:
+    <button onclick='choose_daisy()'>daisy</button>
+    <button onclick='choose_lilac()'>lilac</button><br> 
+    choose your color: 
+    <button onclick='choose_yellow()'>yellow</button>
+    <button onclick='choose_blue()'>blue</button><br><br>
+  </div>
+<script>
+  var ai = 'daisy';
+  function choose_daisy() { ai = 'daisy'; }
+  function choose_lilac() { ai = 'lilac'; }
+
+  function choose_yellow() { 
+    if (moves.length===0) { 
+      set_glow();
+      find_move();
+      banner.attr({text:'your move'}); 
+    }
+  }
+
+  function choose_blue() { 
+    if (moves.length===0) { 
+      set_glow();
+      send_move(); 
+    } 
+  }
+
+  // notation for moves
+  var alpha = 'abcdefghi';
+  var num = '123456789';
+  var moves = [];
+  var player = 0;
+
+  function sx(n) { return ((n%9)+1)*62-25; }  // square to x-pixel
+  function sy(n) { return (Math.floor(n/9)+1)*62-25; }  // square to y-pixel
+  function n2b(n) { return Math.floor(n/9)+1+alpha[n%9]; }  // number to board
+  function b2n(n) { return (n[0]-1)*9+alpha.indexOf(n[1]); }  // board to number
+
+  // set up text area
+  var title = Raphael('title',570,30);
+  var banner = title.text(350,12,'welcome to the meadow');
+  banner.attr({'font-size':16,'font-family':'Georgia'});
+
+  // set up board, squares, walls
+  var r = Raphael('paper',700,570);
+  var board = r.rect(0,0,700,570).attr({fill:'pink'});
+  var squares = r.set();
+  for (i=0; i<81; i++) {
+    squares.push(r.rect(sx(i)-25,sy(i)-25,50,50).attr({fill:'plum'}));
+  }
+  var walls = [];
+  walls[0] = [];
+  for (k=0; k<10; k++) { 
+    walls[0][k] = r.rect(575,k*28+297,112,10).attr({fill:'gold', stroke:'peru'}); 
+  }
+  walls[1] = [];
+  for (k=0; k<10; k++) { 
+    walls[1][k] = r.rect(575,k*28+13,112,10).attr({fill:'aquamarine', stroke:'darkcyan'}); 
+  }
+
+  // set up players' initial positions
+  var pos = [76,4];
+  var players = r.set();
+  players.push(r.circle(sx(pos[0]),sy(pos[0]),22).attr({fill:'gold', stroke:'peru'}),
+    r.circle(sx(pos[1]),sy(pos[1]),22).attr({fill:'aquamarine', stroke:'darkcyan'}));
+
+  var glow;
+  var p = players[0];  //current player
+  var neighbors = r.set(); 
+  var circles = r.set(); 
+  var hover = r.rect(285,285,112,10).attr({fill:'white'}).hide();  // wall placement indicator
+  var pawn_moves=[];
+  var wall_moves=[];
+
+  function set_glow() {
+    p = players[player];
+    glow = p.glow({color:'white', opacity:1});
+    glow.toFront();  // make current player glow
+  }
+
+  function enable_click(options) {
+    for (k=0; k<options.length; k++) {
+      if (options[k].length===5) { wall_moves.push(options[k]); }
+      else { pawn_moves.push(+options[k]); }
+    }
+    for (j=0; j<pawn_moves.length; j++) { neighbors.push(squares[pawn_moves[j]]); }
+    for (j=0; j<pawn_moves.length; j++) { circles.push(r.circle(sx(pawn_moves[j]),sy(pawn_moves[j]),18)); }
+    circles.attr({stroke:'grey'});  // indicators for legal pawn moves
+    neighbors.click(neighbor_onclick);  // add click handlers to legal pawn move squares
+    if (wall_moves.length!=0) {
+      board.mousemove(hover_display);  // display hover wall for legal wall moves
+      squares.mousemove(function() { hover.hide(); })  // hide hover wall when mouse is over squares
+      hover.click(hover_onclick);  // add click handlers for hover wall
+    }
+  }
+
+  function hover_display(e) {
+    mx = e.offsetX || e.layerX;
+    my = e.offsetY || e.layerY;
+    gx = Math.floor((mx-31)/62);
+    gy = Math.floor((my+31)/62);
+    if (mx%62<12) { 
+      place = 'V'+num.slice(gy-1,gy+1)+alpha.slice(gx,gx+2);
+      hover.transform('r90').animate({x:gx*62+12, y:gy*62}, 1);
+    }
+    else { 
+      place = 'H'+num.slice(gy-1,gy+1)+alpha.slice(gx,gx+2);
+      hover.transform('').animate({x:gx*62+12, y:gy*62}, 1);
+    }
+    if (wall_moves.indexOf(place)!=-1) { hover.show(); }
+    else { hover.hide(); }
+  }
+
+  function hover_onclick() {
+    var wall = walls[player].pop();
+    if (mx%62<12) { 
+      wall.animate({x:gx*62+63, y:gy*62-50, width:10, height:112}, 200);
+      moves.push('V'+num.slice(gy-1,gy+1)+alpha.slice(gx,gx+2));
+    }
+    else { 
+      wall.animate({x:gx*62+12, y:gy*62}, 200);
+      moves.push('H'+num.slice(gy-1,gy+1)+alpha.slice(gx,gx+2));
+    }
+    reset();        
+    if (!winner()) { send_move(); }
+  }
+
+  function move_wall() {
+    var wall = walls[player].pop();
+    var place = moves[moves.length-1];
+    gx = alpha.indexOf(place[3]);
+    gy = num.indexOf(place[2]);
+    if (place[0]==='V') { 
+      wall.animate({x:gx*62+63, y:gy*62-50, width:10, height:112}, 200);
+    }
+    else { wall.animate({x:gx*62+12, y:gy*62}, 200); }
+    reset();
+    if (!winner()) { find_move(); }
+  }
+
+  function neighbor_onclick() {
+    pos[player] = this.id-2;
+    moves.push(n2b(pos[player]));
+    p.animate({cx:sx(pos[player]), cy:sy(pos[player])}, 200);
+    reset();        
+    if (!winner()) { send_move(); }
+  }
+
+  function move_pawn() {
+    p.animate({cx:sx(pos[player]), cy:sy(pos[player])}, 200);
+    reset();
+    if (!winner()) { find_move(); }
+  }
+
+  function winner() {
+    if (pos[0]<9){ banner.attr({text:'yellow wins!'}); return true; }
+    if (pos[1]>71){ banner.attr({text:'blue wins!'}); return true; }    
+  }
+
+  function reset() {
+    hover.hide();
+    circles.remove();
+    glow.remove();
+    hover.unclick(hover_onclick);
+    neighbors.unclick(neighbor_onclick);
+    board.unmousemove(hover_display);
+    neighbors.clear();
+    pawn_moves.length = 0;
+    wall_moves.length = 0;
+    player = 1-player;
+    set_glow();
+  }
+
+  function find_move() {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+      if (xmlHttp.readyState != 4 || xmlHttp.status != 200) { 
+        banner.attr({text:"retrieving valid moves..."}); 
+      }
+      else if (xmlHttp.responseText) {
+        banner.attr({text:"your move"}); 
+        enable_click(xmlHttp.responseText.split(','));
+      }
+    };
+    xmlHttp.open('GET', '/?search:'+moves, true);
+    xmlHttp.send(null);
+  }
+
+  function send_move() {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+      if (xmlHttp.readyState != 4 || xmlHttp.status != 200) { 
+        banner.attr({text:"waiting for "+ai+"'s move..."}); 
+      }
+      else if (xmlHttp.responseText) {
+        move = xmlHttp.responseText;
+        banner.attr({text:move});
+        moves.push(move);
+        if (move.length===2) {
+          pos[player] = b2n(move);
+          move_pawn();    
+        }
+        else if (move.length===5) {
+          move_wall(); 
+        }
+      }
+    };
+    xmlHttp.open('GET', '/?'+ai+':'+moves, true);
+    xmlHttp.send(null);
+  }
+
+</script>
+</body>
+</html>
