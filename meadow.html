@@ -13,8 +13,8 @@
     <button onclick='choose_daisy()'>daisy</button>
     <button onclick='choose_lilac()'>lilac</button><br> 
     choose your color: 
-    <button onclick='choose_yellow()'>yellow</button>
-    <button onclick='choose_blue()'>blue</button><br><br>
+    <button id='yellow' onclick='choose_yellow()'>yellow</button>
+    <button id='blue' onclick='choose_blue()'>blue</button><br><br>
   </div>
 <script>
   var ai = 'daisy';
@@ -25,14 +25,18 @@
     if (moves.length===0) { 
       set_glow();
       find_move();
-      banner.attr({text:'your move'}); 
+      banner.attr({text:'your move'});
+      document.getElementById('yellow').disabled = true;
+      document.getElementById('blue').disabled = true;  
     }
   }
 
   function choose_blue() { 
     if (moves.length===0) { 
       set_glow();
-      send_move(); 
+      send_move();
+      document.getElementById('yellow').disabled = true; 
+      document.getElementById('blue').disabled = true;
     } 
   }
 
