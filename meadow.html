@@ -10,34 +10,34 @@
   <div style='position:absolute;left:728px;top:58px;font-family:georgia'>
     would you like to play <a href='https://en.wikipedia.org/wiki/Quoridor' target='_blank'>quoridor</a>?<br><br>
     choose an AI opponent:
-    <button onclick='choose_daisy()'>daisy</button>
-    <button onclick='choose_lilac()'>lilac</button><br> 
-    choose your color: 
-    <button id='yellow' onclick='choose_yellow()'>yellow</button>
-    <button id='blue' onclick='choose_blue()'>blue</button><br><br>
+  <form>    
+    <input type='radio' name='ai' id='daisy' checked>daisy<br>
+    <input type='radio' name='ai' id='lilac'>lilac
+  </form><br>
+    choose your color (yellow goes first):
+  <form>
+    <input type='radio' name='color' id='yellow' checked>yellow<br>
+    <input type='radio' name='color' id='blue'>blue
+  </form><br>
+  <button id='start' onclick='start()'>start</button><br><br>
   </div>
 <script>
-  var ai = 'daisy';
-  function choose_daisy() { ai = 'daisy'; }
-  function choose_lilac() { ai = 'lilac'; }
-
-  function choose_yellow() { 
-    if (moves.length===0) { 
+  function start() {
+    if (document.getElementById('daisy').checked===true) { ai = 'daisy'; }
+    else if (document.getElementById('lilac').checked===true) { ai = 'lilac'; }
+    if (document.getElementById('yellow').checked===true) { 
       set_glow();
       find_move();
       banner.attr({text:'your move'});
-      document.getElementById('yellow').disabled = true;
-      document.getElementById('blue').disabled = true;  
     }
-  }
-
-  function choose_blue() { 
-    if (moves.length===0) { 
+    else if (document.getElementById('blue').checked===true) {
       set_glow();
       send_move();
-      document.getElementById('yellow').disabled = true; 
-      document.getElementById('blue').disabled = true;
-    } 
+    }
+    var selectors = ['daisy','lilac','yellow','blue','start'];
+    for (i=0; i<selectors.length; i++) { 
+      document.getElementById(selectors[i]).disabled = true; 
+    }
   }
 
   // notation for moves
