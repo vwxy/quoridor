@@ -1,6 +1,6 @@
-meadow
+quoridor
 ==========
 
-Meadow is an interface and server for a [Quoridor](https://en.wikipedia.org/wiki/Quoridor)-like game featuring two AI agents.
+Play [Quoridor](https://en.wikipedia.org/wiki/Quoridor) with a choice of two plucky AI agents.
 
-It uses [raphael.js](http://raphaeljs.com) to render SVG and [web.py](http://webpy.org) on the backend.
+Built with [raphael.js](http://raphaeljs.com) and [web.py](http://webpy.org).
