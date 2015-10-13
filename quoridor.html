@@ -1,23 +1,23 @@
 <!doctype html>
 <html>
 <head>
-  <title>meadow</title>
+  <title>quoridor</title>
   <script src='raphael-min.js'></script>
 </head>
 <body>
   <div id='title' style='position:absolute;left:1em;top:1em'></div>
   <div id='paper' style='position:absolute;left:1em;top:50px'></div>
   <div style='position:absolute;left:728px;top:58px;font-family:georgia'>
-    would you like to play <a href='https://en.wikipedia.org/wiki/Quoridor' target='_blank'>quoridor</a>?<br><br>
+    would you like to <a href='https://en.wikipedia.org/wiki/Quoridor' target='_blank'>play</a>?<br><br>
     choose an AI opponent:
   <form>
     <input type='radio' name='ai' id='daisy' checked>daisy<br>
     <input type='radio' name='ai' id='lilac'>lilac
   </form><br>
-    choose your color (yellow goes first):
+    choose your color (orange goes first):
   <form>
-    <input type='radio' name='color' id='yellow' checked>yellow<br>
-    <input type='radio' name='color' id='blue'>blue
+    <input type='radio' name='color' id='orange' checked>orange<br>
+    <input type='radio' name='color' id='purple'>purple
   </form><br>
   <button id='start' onclick='start()'>start</button><br><br>
   </div>
@@ -25,16 +25,16 @@
   function start() {
     if (document.getElementById('daisy').checked===true) { ai = 'daisy'; }
     else if (document.getElementById('lilac').checked===true) { ai = 'lilac'; }
-    if (document.getElementById('yellow').checked===true) { 
+    if (document.getElementById('orange').checked===true) { 
       set_glow();
       find_move();
       banner.attr({text:'your move'});
     }
-    else if (document.getElementById('blue').checked===true) {
+    else if (document.getElementById('purple').checked===true) {
       set_glow();
       send_move();
     }
-    var selectors = ['daisy','lilac','yellow','blue','start'];
+    var selectors = ['daisy','lilac','orange','purple','start'];
     for (i=0; i<selectors.length; i++) { 
       document.getElementById(selectors[i]).disabled = true; 
     }
@@ -53,31 +53,31 @@
 
   // set up text area
   var title = Raphael('title',570,30);
-  var banner = title.text(350,12,'welcome to the meadow');
+  var banner = title.text(350,12,'welcome to quoridor');
   banner.attr({'font-size':16,'font-family':'Georgia'});
 
   // set up board, squares, walls
   var r = Raphael('paper',700,570);
-  var board = r.rect(0,0,700,570).attr({fill:'pink'});
+  var board = r.rect(0,0,700,570).attr({fill:'darkturquoise'});
   var squares = r.set();
   for (i=0; i<81; i++) {
-    squares.push(r.rect(sx(i)-25,sy(i)-25,50,50).attr({fill:'plum'}));
+    squares.push(r.rect(sx(i)-25,sy(i)-25,50,50).attr({fill:'steelblue'}));
   }
   var walls = [];
   walls[0] = [];
   for (k=0; k<10; k++) { 
-    walls[0][k] = r.rect(575,k*28+297,112,10).attr({fill:'gold', stroke:'peru'}); 
+    walls[0][k] = r.rect(575,k*28+297,112,10).attr({fill:'darkorange', stroke:'chocolate'}); 
   }
   walls[1] = [];
   for (k=0; k<10; k++) { 
-    walls[1][k] = r.rect(575,k*28+13,112,10).attr({fill:'aquamarine', stroke:'darkcyan'}); 
+    walls[1][k] = r.rect(575,k*28+13,112,10).attr({fill:'orchid', stroke:'darkorchid'}); 
   }
 
   // set up players' initial positions
   var pos = [76,4];
   var players = r.set();
-  players.push(r.circle(sx(pos[0]),sy(pos[0]),22).attr({fill:'gold', stroke:'peru'}),
-    r.circle(sx(pos[1]),sy(pos[1]),22).attr({fill:'aquamarine', stroke:'darkcyan'}));
+  players.push(r.circle(sx(pos[0]),sy(pos[0]),22).attr({fill:'darkorange', stroke:'chocolate'}),
+    r.circle(sx(pos[1]),sy(pos[1]),22).attr({fill:'orchid', stroke:'darkorchid'}));
 
   var glow;
   var p = players[0];  //current player
@@ -100,7 +100,7 @@
     }
     for (j=0; j<pawn_moves.length; j++) { neighbors.push(squares[pawn_moves[j]]); }
     for (j=0; j<pawn_moves.length; j++) { circles.push(r.circle(sx(pawn_moves[j]),sy(pawn_moves[j]),18)); }
-    circles.attr({stroke:'grey'});  // indicators for legal pawn moves
+    circles.attr({stroke:'tan'});  // indicators for legal pawn moves
     neighbors.click(neighbor_onclick);  // add click handlers to legal pawn move squares
     if (wall_moves.length!=0) {
       board.mousemove(hover_display);  // display hover wall for legal wall moves
@@ -168,8 +168,8 @@
   }
 
   function winner() {
-    if (pos[0]<9){ banner.attr({text:'yellow wins!'}); return true; }
-    if (pos[1]>71){ banner.attr({text:'blue wins!'}); return true; }    
+    if (pos[0]<9){ banner.attr({text:'orange wins!'}); return true; }
+    if (pos[1]>71){ banner.attr({text:'purple wins!'}); return true; }    
   }
 
   function reset() {
